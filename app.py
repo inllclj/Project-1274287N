@@ -1,5 +1,4 @@
 import streamlit as st
-import tensorflow as tf
 import numpy as np
 from tensorflow.keras.applications.vgg16 import preprocess_input
 from PIL import Image
