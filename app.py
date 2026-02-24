@@ -2,7 +2,42 @@ import streamlit as st
 import numpy as np
 from tensorflow.keras.applications.vgg16 import preprocess_input
 from PIL import Image
+import torch
+import torch.nn as nn
+from torchvision import transforms
 
+# --- define SimpleCNN class ---
+class SimpleCNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        def convBlock(ni, no):
+            return nn.Sequential(
+                nn.Conv2d(ni, no, kernel_size=3, padding=1),
+                nn.ReLU(inplace=True),
+                nn.BatchNorm2d(no),
+                nn.MaxPool2d(2),
+            )
+
+        self.features = nn.Sequential(
+            convBlock(1, 16),  # Note: '1' means Grayscale
+            convBlock(16, 32),
+            convBlock(32, 64),
+        )
+
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(64*28*28, 128),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+            nn.Linear(128, 1),
+            nn.Sigmoid()
+        )
+        self.loss_fn = nn.BCELoss()
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.classifier(x)
+        return x
 
 # --- PAGE SETUP ---
 st.set_page_config(page_title="Dual-Engine Casting Inspector", layout="wide")
@@ -21,10 +56,10 @@ def load_keras():
 
 @st.cache_resource
 def load_pytorch():
-    import torch
-    # Note: Ensure your SimpleCNN class definition is included here!
     model = SimpleCNN() 
-    model.load_state_dict(torch.load('best_casting_model.pth', map_location='cpu'))
+    # Load weights
+    state_dict = torch.load('best_casting_model.pth', map_location='cpu')
+    model.load_state_dict(state_dict)
     model.eval()
     return model
 
@@ -42,9 +77,9 @@ def predict_pytorch(model, image):
     from torchvision import transforms
     import torch
     transform = transforms.Compose([
-        transforms.Resize((224, 224)),
+        transforms.Grayscale(num_output_channels=1), # IMPORTANT: Match the '1' in your model
+        transforms.Resize((224, 224)), # Assumes 224x224 based on 64*28*28 math
         transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
     img_tensor = transform(image).unsqueeze(0)
     with torch.no_grad():
