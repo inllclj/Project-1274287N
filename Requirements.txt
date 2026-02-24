@@ -1,0 +1,5 @@
+Plaintext
+streamlit
+tensorflow-cpu
+pillow
+numpy
