@@ -88,7 +88,6 @@ def predict_pytorch(model, image):
 
 # --- 3. MAIN UI LOGIC ---
 uploaded_file = st.file_uploader("Upload casting image...", type=["jpg", "jpeg", "png"])
-
 if uploaded_file:
     col1, col2 = st.columns(2)
     image = Image.open(uploaded_file).convert('RGB')
@@ -102,12 +101,20 @@ if uploaded_file:
             if model_type == "Keras (VGG16)":
                 model = load_keras()
                 score = predict_keras(model, image)
-            else:
+                
+                # VGG16 FIX: High score (>0.5) is OK due to alphabetical sorting
+                if score > 0.5:
+                    st.success(f"✅ OK (Confidence: {score:.2%})")
+                else:
+                    st.error(f"⚠️ FAULTY (Confidence: {1-score:.2%})")
+            
+            else: # PyTorch Logic
                 model = load_pytorch()
                 score = predict_pytorch(model, image)
-            
-            # Display Result
-            if score > 0.5:
-                st.error(f"⚠️ FAULTY (Confidence: {score:.2%})")
-            else:
-                st.success(f"✅ OK (Confidence: {1-score:.2%})")
+                
+                # PYTORCH DEFAULT: Usually 0=OK, 1=Faulty (but check your training!)
+                # If your PyTorch is ALSO flipped, just swap success/error here too.
+                if score > 0.5:
+                    st.error(f"⚠️ FAULTY (Confidence: {score:.2%})")
+                else:
+                    st.success(f"✅ OK (Confidence: {1-score:.2%})")
