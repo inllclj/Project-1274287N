@@ -2,39 +2,8 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras.applications.vgg16 import preprocess_input
-
-# 1. LOAD MODEL (Code 2 logic, but optimized)
-@st.cache_resource
-def load_model():
-    return tf.keras.models.load_model('best_model.h5')
-
-model = load_model()
-
-# 2. THE PREDICTION FUNCTION (Code 2 logic)
-def predict(image):
-    # Process image (resize, array, preprocess_input)
-    # ...
-    prediction = model.predict(img_array)
-    return "Faulty" if prediction[0][0] > 0.5 else "OK"
-
-# 3. STREAMLIT UI
-st.title("Casting Defect Scanner")
-uploaded_file = st.file_uploader("Upload Image")
-if uploaded_file:
-    result = predict(uploaded_file)
-    st.write(f"The part is: {result}")
-
-----------------------------------------------------------------------------------------------------
-Gemini said
-Yes, you absolutely can! Combining them into one UI is a great way to compare how the two different frameworks (PyTorch vs. Keras) perform on the same image.
-
-To do this, we will use a Streamlit Sidebar to let the user choose which "engine" they want to use for the inspection.
-
-The "Dual-Engine" app.py
-Python
-import streamlit as st
 from PIL import Image
-import numpy as np
+
 
 # --- PAGE SETUP ---
 st.set_page_config(page_title="Dual-Engine Casting Inspector", layout="wide")
